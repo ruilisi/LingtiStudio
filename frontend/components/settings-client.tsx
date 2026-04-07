@@ -56,7 +56,7 @@ export function SettingsClient() {
         <div className="workspace-title">
           <Typography.Title level={2}>Setup and Connectors</Typography.Title>
           <Typography.Paragraph type="secondary">
-            配置 LingtiVideo 的默认 provider、模型和密钥。这里的修改会直接写入本地 `configs/config.yaml`。
+            配置 LingtiStudio 的默认 provider、模型和密钥。这里的修改会直接写入本地 `configs/config.yaml`。
           </Typography.Paragraph>
         </div>
         <Button icon={<ReloadOutlined />} onClick={() => void refreshAll()}>

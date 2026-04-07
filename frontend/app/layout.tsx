@@ -7,7 +7,7 @@ import { WorkspaceLayout } from "@/components/workspace-layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LingtiVideo",
+  title: "LingtiStudio",
   description: "Open-source AI video generation workflow"
 };
 

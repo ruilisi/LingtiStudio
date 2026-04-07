@@ -1,9 +1,9 @@
-# LingtiVideo
+# LingtiStudio
 
 Lingti 在中文里是“灵缇”，也就是速度极快的灰狗。  
-**LingtiVideo** 的目标不只是“生成一个视频”，而是帮助你更快地把一个想法变成一整条完整的视频生产流程。
+**LingtiStudio** 的目标不只是“生成一个视频”，而是帮助你更快地把一个想法变成一整条完整的视频生产流程。
 
-从一个主题出发，LingtiVideo 可以把流程串起来：
+从一个主题出发，LingtiStudio 可以把流程串起来：
 
 **脚本 -> 审核 -> 关键帧 -> 配音 -> 视频片段 -> 组装 -> 成片**
 
@@ -18,10 +18,10 @@ Lingti 在中文里是“灵缇”，也就是速度极快的灰狗。
 <table>
   <tr>
     <td width="50%">
-      <img src="./screenshots/index_page.png" alt="LingtiVideo 首页" />
+      <img src="./screenshots/index_page.png" alt="LingtiStudio 首页" />
     </td>
     <td width="50%">
-      <img src="./screenshots/video_gen_page.png" alt="LingtiVideo 视频生成页" />
+      <img src="./screenshots/video_gen_page.png" alt="LingtiStudio 视频生成页" />
     </td>
   </tr>
   <tr>
@@ -34,7 +34,7 @@ Lingti 在中文里是“灵缇”，也就是速度极快的灰狗。
 
 ## 项目简介
 
-LingtiVideo 是一个适合本地运行的开源 AI 视频生产系统。
+LingtiStudio 是一个适合本地运行的开源 AI 视频生产系统。
 
 它不是把几个脚本随便拼在一起，而是把整条生成链路尽量做成“一个产品”：
 
@@ -62,7 +62,7 @@ LingtiVideo 是一个适合本地运行的开源 AI 视频生产系统。
 ## 为什么它更像生产系统
 
 很多 AI 视频产品擅长的是“给你一个结果”。  
-LingtiVideo 更强调的是“给你一条完整流程”。
+LingtiStudio 更强调的是“给你一条完整流程”。
 
 它重点解决的是：
 
@@ -76,7 +76,7 @@ LingtiVideo 更强调的是“给你一条完整流程”。
 
 ## 全流程一键化
 
-LingtiVideo 的核心价值，是把长视频 / 多分镜 AI 生成流程尽量一键化：
+LingtiStudio 的核心价值，是把长视频 / 多分镜 AI 生成流程尽量一键化：
 
 1. 从主题或对标分析生成脚本
 2. 在网页里审核并修改分镜
@@ -145,8 +145,8 @@ ffmpeg -version
 ### 2. 安装
 
 ```bash
-git clone https://github.com/ruilisi/LingtiVideo.git
-cd LingtiVideo
+git clone https://github.com/ruilisi/LingtiStudio.git
+cd LingtiStudio
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -250,7 +250,7 @@ data/               输出、上传、缓存等运行数据
 
 - 这个项目当前更偏向本地创作工作流，而不是多租户 SaaS。
 - 某些 provider 已经能在界面层配置，但后端仍然以当前已接好的能力为主。
-- FFmpeg 功能依赖你的本地构建。如果本机不支持字幕烧录，LingtiVideo 仍然可以输出 MP4 + SRT。
+- FFmpeg 功能依赖你的本地构建。如果本机不支持字幕烧录，LingtiStudio 仍然可以输出 MP4 + SRT。
 
 ---
 

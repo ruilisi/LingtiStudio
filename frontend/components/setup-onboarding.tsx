@@ -45,7 +45,7 @@ export function SetupOnboarding() {
       footer={null}
       width={920}
       maskClosable={false}
-      title="欢迎使用 LingtiVideo"
+      title="欢迎使用 LingtiStudio"
       destroyOnHidden
     >
       <Space direction="vertical" size={18} style={{ width: "100%" }}>

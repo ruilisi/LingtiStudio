@@ -23,10 +23,10 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         <div className="app-brand">
           <Space direction="vertical" size={10}>
             <Tag color="blue" bordered={false} style={{ width: "fit-content", margin: 0 }}>
-              LingtiVideo
+              LingtiStudio
             </Tag>
             <Typography.Title level={3} style={{ color: "#f5edec", margin: 0 }}>
-              LingtiVideo Studio
+              LingtiStudio
             </Typography.Title>
             <Typography.Paragraph style={{ color: "#c8a8a8", margin: 0 }}>
               The greyhound-speed AI video workflow for creation, review, recovery, and delivery.

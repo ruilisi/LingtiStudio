@@ -1,9 +1,9 @@
-# LingtiVideo
+# LingtiStudio
 
 Lingti means **greyhound** in Chinese, the fastest dog.  
-**LingtiVideo** helps you turn an idea into a complete AI video workflow, fast.
+**LingtiStudio** helps you turn an idea into a complete AI video workflow, fast.
 
-From a single topic, LingtiVideo can take you through:
+From a single topic, LingtiStudio can take you through:
 
 **script -> review -> keyframes -> voiceover -> clips -> assembly -> final video**
 
@@ -18,10 +18,10 @@ It is built for creators who want to go from short videos to longer, multi-scene
 <table>
   <tr>
     <td width="50%">
-      <img src="./screenshots/index_page.png" alt="LingtiVideo home page" />
+      <img src="./screenshots/index_page.png" alt="LingtiStudio home page" />
     </td>
     <td width="50%">
-      <img src="./screenshots/video_gen_page.png" alt="LingtiVideo video generation page" />
+      <img src="./screenshots/video_gen_page.png" alt="LingtiStudio video generation page" />
     </td>
   </tr>
   <tr>
@@ -34,11 +34,11 @@ It is built for creators who want to go from short videos to longer, multi-scene
 
 ## What It Is
 
-LingtiVideo is an open-source AI video production system for local-first creation.
+LingtiStudio is an open-source AI video production system for local-first creation.
 
 It is designed to make the full generation chain feel like **one product**, not a pile of disconnected scripts and providers.
 
-With LingtiVideo, you can go from a rough idea to a polished deliverable with:
+With LingtiStudio, you can go from a rough idea to a polished deliverable with:
 - script generation
 - human review before expensive generation starts
 - keyframe image generation
@@ -55,14 +55,14 @@ That means you can build:
 - polished ad-style videos
 - longer AI-assisted productions with reviewable scenes and recoverable outputs
 
-Instead of a one-shot black box, LingtiVideo gives you a workflow you can pause, inspect, edit, resume, and deliver.
+Instead of a one-shot black box, LingtiStudio gives you a workflow you can pause, inspect, edit, resume, and deliver.
 
 ---
 
 ## Why It Feels Different
 
 Most AI video tools are great at giving you a result.  
-LingtiVideo is built to give you a **production pipeline**.
+LingtiStudio is built to give you a **production pipeline**.
 
 It focuses on:
 - **reviewability**: inspect and edit scenes before expensive generation begins
@@ -75,7 +75,7 @@ It focuses on:
 
 ## Workflow
 
-LingtiVideo turns end-to-end AI video generation into a one-click, full-stack workflow:
+LingtiStudio turns end-to-end AI video generation into a one-click, full-stack workflow:
 
 1. Generate a script from a topic or imported reference analysis
 2. Review and edit scenes before continuing
@@ -143,8 +143,8 @@ ffmpeg -version
 ### 2. Install
 
 ```bash
-git clone https://github.com/ruilisi/LingtiVideo.git
-cd LingtiVideo
+git clone https://github.com/ruilisi/LingtiStudio.git
+cd LingtiStudio
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -252,7 +252,7 @@ data/               Outputs, uploads, cache, local runtime data
 
 - This project is optimized for local workflows, not multi-tenant SaaS deployment.
 - Some providers are configurable at the UI layer before every backend path is fully generalized.
-- FFmpeg features depend on your local build. If subtitle burn-in is unavailable, LingtiVideo can still output MP4 + SRT.
+- FFmpeg features depend on your local build. If subtitle burn-in is unavailable, LingtiStudio can still output MP4 + SRT.
 
 ---
 

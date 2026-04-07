@@ -1,5 +1,5 @@
 """
-LingtiVideo
+LingtiStudio
 FastAPI 后端服务
 
 核心功能：
@@ -62,7 +62,7 @@ from modules.memory import get_memory_manager
 # ============================================================
 
 app = FastAPI(
-    title="LingtiVideo API",
+    title="LingtiStudio API",
     description="Open-source AI video generation workflow",
     version="1.0.0"
 )
@@ -1209,7 +1209,7 @@ async def run_workflow(project_id: str, request: CreateProjectRequest):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "version": "1.0.0", "name": "LingtiVideo"}
+    return {"status": "ok", "version": "1.0.0", "name": "LingtiStudio"}
 
 
 @app.get("/api/system/health")
@@ -1218,7 +1218,7 @@ async def system_health():
     active_llm = get_active_llm_config(config)
     return {
         "status": "ok",
-        "name": "LingtiVideo",
+        "name": "LingtiStudio",
         "version": "1.0.0",
         "api_base": "",
         "defaults": {

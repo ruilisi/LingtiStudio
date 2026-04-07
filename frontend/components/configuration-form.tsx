@@ -248,7 +248,7 @@ export function ConfigurationForm({
       {contextHolder}
       {showTitle ? (
         <div className="workspace-title">
-          <Typography.Title level={3}>首次配置 LingtiVideo</Typography.Title>
+          <Typography.Title level={3}>首次配置 LingtiStudio</Typography.Title>
           <Typography.Paragraph type="secondary">
             选择你要用的 provider 和模型，填完必要的密钥后就可以开始生成视频。
           </Typography.Paragraph>

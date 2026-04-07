@@ -1,5 +1,5 @@
 """
-LingtiVideo
+LingtiStudio
 核心配置加载器 - 支持 YAML 配置文件与环境变量双轨制
 """
 

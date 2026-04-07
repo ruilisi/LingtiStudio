@@ -74,11 +74,11 @@ export default function HomePage() {
       <section className="hero-panel">
         <div className="hero-copy">
           <Tag color="blue" bordered={false}>
-            LingtiVideo
+            LingtiStudio
           </Tag>
           <Typography.Title level={1}>The greyhound-speed AI video workflow</Typography.Title>
           <Typography.Paragraph>
-            Lingti means greyhound in Chinese, the fastest dog. LingtiVideo helps you turn an idea into a full video workflow with script generation, review, assets, video clips, recovery, and delivery.
+            Lingti means greyhound in Chinese, the fastest dog. LingtiStudio helps you turn an idea into a full video workflow with script generation, review, assets, video clips, recovery, and delivery.
           </Typography.Paragraph>
           <Space wrap>
             <Link href="/create">
