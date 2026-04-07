@@ -211,6 +211,65 @@ http://127.0.0.1:3001
 
 ---
 
+## Docker
+
+LingtiStudio 现在也提供面向 release 的 Docker 方案，用户可以先把产品跑起来，再在浏览器里完成 API token 配置。
+
+### 方案 1：Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+启动后打开：
+
+```text
+http://localhost:3000
+```
+
+首次使用时：
+- LingtiStudio 会自动弹出网页配置窗口
+- 用户可以直接在浏览器里选择 provider 和 model
+- API token 会写入 `./configs/config.yaml`
+- 输出文件、上传素材和本地运行数据会落在 `./data`
+
+默认端口：
+- Web UI：`3000`
+- API：`8000`
+
+### 方案 2：单 Docker 镜像
+
+构建镜像：
+
+```bash
+docker build -t lingtistudio:latest .
+```
+
+运行：
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -p 8000:8000 \
+  -v "$(pwd)/configs:/app/configs" \
+  -v "$(pwd)/data:/app/data" \
+  --name lingtistudio \
+  lingtistudio:latest
+```
+
+然后打开：
+
+```text
+http://localhost:3000
+```
+
+这条路径适合开源 release 场景：
+- 一个镜像即可启动
+- 通过浏览器完成首次配置
+- 配置和产物都能持久化到宿主机
+
+---
+
 ## CLI 用法
 
 直接用命令行发起视频任务：

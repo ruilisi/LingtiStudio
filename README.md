@@ -209,6 +209,65 @@ If the config is incomplete, the setup dialog will appear automatically.
 
 ---
 
+## Docker
+
+LingtiStudio also ships with a release-oriented Docker setup so users can start the product first and configure tokens in the browser later.
+
+### Option 1: Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+Then open:
+
+```text
+http://localhost:3000
+```
+
+On first run:
+- LingtiStudio opens the browser setup dialog automatically
+- users can choose providers and models in the UI
+- API tokens are written to `./configs/config.yaml`
+- outputs, uploads, and local runtime data are stored in `./data`
+
+Default ports:
+- Web UI: `3000`
+- API: `8000`
+
+### Option 2: Single Docker image
+
+Build:
+
+```bash
+docker build -t lingtistudio:latest .
+```
+
+Run:
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -p 8000:8000 \
+  -v "$(pwd)/configs:/app/configs" \
+  -v "$(pwd)/data:/app/data" \
+  --name lingtistudio \
+  lingtistudio:latest
+```
+
+Then open:
+
+```text
+http://localhost:3000
+```
+
+This path is intended for open-source releases where users want:
+- one container image
+- browser-first onboarding
+- persistent config and output directories on the host
+
+---
+
 ## CLI
 
 Run a generation task directly:
