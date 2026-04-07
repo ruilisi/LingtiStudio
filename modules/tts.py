@@ -671,9 +671,7 @@ DEFAULT_VOICE_BY_GENDER = {
     "female": "female-shaonv",  # 少女音色
 }
 
-# 旁白专用音色（speaker_id=0）
-# 使用成熟女声，与角色少女音区分开
-NARRATOR_VOICE = "female-chengshu"  # 旁白音色：成熟女声
+NARRATOR_VOICE = "female-chengshu"  # 旁白默认回退音色
 
 
 def _infer_voice_from_voiceover(voiceover: str) -> str:
@@ -697,6 +695,18 @@ def _infer_voice_from_voiceover(voiceover: str) -> str:
     else:
         # 纯旁白 或 男女混合对话 → 旁白成熟女声
         return NARRATOR_VOICE
+
+
+def _resolve_narrator_voice(config: Optional[PilipiliConfig], requested_voice_id: Optional[str]) -> str:
+    requested = (requested_voice_id or "").strip()
+    if requested:
+        return requested
+    if config is None:
+        config = get_config()
+    configured = (config.tts.default_voice or "").strip()
+    if configured:
+        return configured
+    return NARRATOR_VOICE
 
 
 def _split_voiceover_by_speaker(voiceover: str) -> list[tuple[str, str]]:
@@ -910,7 +920,7 @@ async def generate_voiceover_multi_speaker(
         elif speaker_type == 'female':
             return DEFAULT_VOICE_BY_GENDER['female']
         else:
-            return NARRATOR_VOICE
+            return (char_voice_map or {}).get(0, NARRATOR_VOICE)
 
     if verbose:
         print(f"[TTS] Scene {scene.scene_id} 拆分成 {len(segments)} 段: {[(s[0], s[1][:15]) for s in segments]}")
@@ -972,16 +982,18 @@ async def generate_all_voiceovers(
     Returns:
         {scene_id: (audio_path, duration)} 字典
     """
+    narrator_voice = _resolve_narrator_voice(config, voice_id)
+
     # 构建 character_id -> voice_id 映射
     char_voice_map: dict[int, str] = {}
     # speaker_id=0 始终为旁白音色，不受 characters 列表影响
-    char_voice_map[0] = NARRATOR_VOICE
+    char_voice_map[0] = narrator_voice
     if characters:
         for char in characters:
             cid = char.character_id if hasattr(char, 'character_id') else char.get('character_id')
             if cid == 0:
-                # character_id=0 是旁白，始终使用 NARRATOR_VOICE
-                char_voice_map[0] = NARRATOR_VOICE
+                # character_id=0 是旁白，优先使用用户显式选择的 voice_id
+                char_voice_map[0] = narrator_voice
                 continue
             gender = (char.gender if hasattr(char, 'gender') else char.get('gender', 'female')) or 'female'
             char_voice_map[cid] = DEFAULT_VOICE_BY_GENDER.get(gender.lower(), "female-shaonv")
@@ -1013,11 +1025,11 @@ async def generate_all_voiceovers(
                         char_voice_map=char_voice_map if char_voice_map else None,
                     )
                 else:
-                    # 纯旁白：直接用旁白音色
+                    # 纯旁白：优先使用用户显式选择的 voice_id
                     path, duration = await generate_voiceover(
                         scene=scene,
                         output_dir=output_dir,
-                        voice_id=NARRATOR_VOICE,
+                        voice_id=narrator_voice,
                         emotion=emotion,
                         speed=speed,
                         config=config,
