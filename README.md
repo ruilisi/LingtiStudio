@@ -218,6 +218,22 @@ The release image is intentionally trimmed for the browser-first workflow:
 - it avoids shipping heavy optional dependencies such as local Whisper / Torch by default
 - optional integrations such as pyJianYingDraft still fall back gracefully when unavailable
 
+### Recommended: prebuilt release image
+
+Tagged releases can publish a prebuilt container image to GHCR through GitHub Actions:
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -p 8000:8000 \
+  -v "$(pwd)/configs:/app/configs" \
+  -v "$(pwd)/data:/app/data" \
+  --name lingtistudio \
+  ghcr.io/ruilisi/lingtistudio:v1.1.0
+```
+
+This is the fastest path for end users because it avoids local image builds entirely.
+
 ### Option 1: Docker Compose
 
 ```bash
