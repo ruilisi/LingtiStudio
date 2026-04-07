@@ -43,6 +43,7 @@ import {
   isSetupRequiredError,
   listProjectLogs,
   runProjectAction,
+  updateScript,
   updateProjectTitle
 } from "@/lib/api";
 import type {
@@ -54,6 +55,13 @@ import type {
   SceneDraft,
   ScriptDraft
 } from "@/lib/types";
+
+type WorkflowErrorInsight = {
+  title: string;
+  stage: string;
+  summary: string;
+  suggestions: string[];
+};
 
 const stageLabel: Record<string, string> = {
   idle: "待处理",
@@ -103,6 +111,127 @@ function getCurrentStep(stage?: string) {
   }
   const index = workflowSteps.findIndex((step) => step.key === stage);
   return index >= 0 ? index : 0;
+}
+
+function analyzeWorkflowError(rawError?: string, statusMessage?: string, isZh = true): WorkflowErrorInsight {
+  const raw = rawError || statusMessage || "";
+  const normalized = raw.toLowerCase();
+
+  if (normalized.includes("api.minimaxi.com") && normalized.includes("readtimeout")) {
+    return {
+      title: isZh ? "MiniMax 生图请求超时" : "MiniMax image request timed out",
+      stage: isZh ? "关键帧生成" : "Keyframe generation",
+      summary: isZh
+        ? "关键帧阶段请求了 MiniMax 图片接口，但在 120 秒内没有等到返回结果。通常是接口拥堵、单张图片生成过慢，或者当前并发偏高导致。"
+        : "The workflow reached keyframe generation, but a MiniMax image request did not return within 120 seconds. This is usually caused by provider congestion, slow image generation, or overly high concurrency.",
+      suggestions: isZh
+        ? [
+            "稍后重试当前项目。",
+            "把关键帧并发调低，比如 1 或 2。",
+            "提高图片请求超时并为超时场景加重试。",
+          ]
+        : [
+            "Retry the project later.",
+            "Reduce keyframe concurrency to 1 or 2.",
+            "Increase the image request timeout and add retries for timeout cases.",
+          ],
+    };
+  }
+
+  if (normalized.includes("invalid api key")) {
+    return {
+      title: isZh ? "API Key 无效" : "Invalid API key",
+      stage: isZh ? "外部服务鉴权" : "Provider authentication",
+      summary: isZh
+        ? "当前工作流调用的外部服务返回了鉴权失败。通常是 API Key 填错、过期，或当前 provider 和你填写的 key 不匹配。"
+        : "An external provider rejected the request due to authentication failure. The API key may be wrong, expired, or mismatched with the selected provider.",
+      suggestions: isZh
+        ? [
+            "打开 Setup 页面重新检查 provider 和 key。",
+            "确认 key 对应的是当前正在使用的模型平台。",
+          ]
+        : [
+            "Open Setup and re-check the provider and key.",
+            "Make sure the key belongs to the provider and model you selected.",
+          ],
+    };
+  }
+
+  if (normalized.includes("resource_exhausted") || normalized.includes("quota exceeded")) {
+    return {
+      title: isZh ? "额度不足或配额耗尽" : "Quota exhausted",
+      stage: isZh ? "外部服务调用" : "Provider request",
+      summary: isZh
+        ? "当前 provider 返回了额度不足或配额耗尽，工作流本身没有继续执行。"
+        : "The provider returned a quota or billing exhaustion error, so the workflow could not continue.",
+      suggestions: isZh
+        ? [
+            "检查当前账号余额或套餐额度。",
+            "切换到别的 provider 或模型后重试。",
+          ]
+        : [
+            "Check your balance or quota for the current account.",
+            "Switch to another provider or model and retry.",
+          ],
+    };
+  }
+
+  if (normalized.includes("accountoverdueerror")) {
+    return {
+      title: isZh ? "视频账号欠费" : "Video account overdue",
+      stage: isZh ? "视频生成" : "Video generation",
+      summary: isZh
+        ? "视频平台返回了账号欠费或账单未结清的错误，视频片段无法继续生成。"
+        : "The video provider reported an overdue account or unpaid balance, so clip generation could not continue.",
+      suggestions: isZh
+        ? [
+            "给对应视频平台账号充值或结清账单。",
+            "恢复后从视频阶段继续即可，不需要重跑全部流程。",
+          ]
+        : [
+            "Recharge or settle the billing issue for the video provider account.",
+            "Then resume from the video stage instead of rerunning the entire workflow.",
+          ],
+    };
+  }
+
+  if (normalized.includes("ffmpeg")) {
+    return {
+      title: isZh ? "FFmpeg 组装失败" : "FFmpeg assembly failed",
+      stage: isZh ? "视频组装" : "Video assembly",
+      summary: isZh
+        ? "素材大概率已经生成出来了，但在最后拼接、转场、字幕或编码阶段失败。"
+        : "Most media assets were likely generated, but the final merge, transition, subtitle, or encoding step failed.",
+      suggestions: isZh
+        ? [
+            "优先使用“重新组装”而不是整条重跑。",
+            "检查本机 FFmpeg 是否支持当前字幕或转场能力。",
+          ]
+        : [
+            "Use reassemble first instead of rerunning the entire workflow.",
+            "Check whether the local FFmpeg build supports the required subtitle or transition features.",
+          ],
+    };
+  }
+
+  return {
+    title: isZh ? "工作流执行失败" : "Workflow failed",
+    stage: isZh ? "请查看原始错误" : "See raw error details",
+    summary: isZh
+      ? "页面已经把原始 traceback 收起来了。先看下面的人话总结和建议动作，再决定是否需要查看完整报错。"
+      : "The raw traceback is collapsed below. Start with the human-readable summary and suggestions before checking the full stack trace.",
+    suggestions: isZh
+      ? [
+          "先看任务状态和失败阶段。",
+          "如果是外部平台错误，优先检查 provider、token、配额和账单。",
+          "如果是组装失败，优先尝试重新组装。",
+        ]
+      : [
+          "Check the failed stage first.",
+          "If this is a provider error, verify provider choice, token, quota, and billing.",
+          "If assembly failed, try reassembling before rerunning the full workflow.",
+        ],
+  };
 }
 
 export function ProjectDetailClient({
@@ -188,6 +317,10 @@ export function ProjectDetailClient({
   const isCompleted = project?.status?.stage === "completed";
   const isAwaitingReview = project?.status?.stage === "awaiting_review";
   const artifacts = project?.artifacts;
+  const errorInsight = useMemo(
+    () => analyzeWorkflowError(project?.status?.error, project?.status?.message, isZh),
+    [isZh, project?.status?.error, project?.status?.message]
+  );
 
   useEffect(() => {
     if (scriptTitle) {
@@ -245,7 +378,7 @@ export function ProjectDetailClient({
         video_engine: "kling",
         add_subtitles: true
       });
-      messageApi.success("操作已提交");
+      messageApi.success(isZh ? "操作已提交" : "Action submitted");
       await loadProject();
     } catch (error) {
       if (isSetupRequiredError(error)) {
@@ -253,6 +386,19 @@ export function ProjectDetailClient({
       } else {
         messageApi.error((error as Error).message);
       }
+    } finally {
+      setBusyAction(undefined);
+    }
+  }
+
+  async function handleSaveReviewDraft() {
+    setBusyAction("save_review_draft");
+    try {
+      await updateScript(projectId, reviewScenes);
+      messageApi.success(isZh ? "分镜草稿已保存" : "Scene draft saved");
+      await loadProject();
+    } catch (error) {
+      messageApi.error((error as Error).message);
     } finally {
       setBusyAction(undefined);
     }
@@ -426,8 +572,55 @@ export function ProjectDetailClient({
             <Alert
               type="error"
               showIcon
-              message={isZh ? "执行失败" : "Execution failed"}
-              description={project.status.error}
+              message={errorInsight.title}
+              description={
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <div>
+                    <Typography.Text strong>{isZh ? "失败阶段：" : "Failure stage: "}</Typography.Text>
+                    <Typography.Text>{errorInsight.stage}</Typography.Text>
+                  </div>
+                  <Typography.Paragraph style={{ marginBottom: 0 }}>
+                    {errorInsight.summary}
+                  </Typography.Paragraph>
+                  <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                    {errorInsight.suggestions.map((item, index) => (
+                      <Typography.Text key={`${item}-${index}`} type="secondary">
+                        {isZh ? `建议 ${index + 1}：` : `Suggestion ${index + 1}: `}{item}
+                      </Typography.Text>
+                    ))}
+                  </Space>
+                  {project?.status?.stage === "failed" && actions.length ? (
+                    <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                      <Typography.Text strong>
+                        {isZh ? "可直接尝试的恢复操作" : "Recovery actions you can try now"}
+                      </Typography.Text>
+                      <Space wrap>
+                        {actions.map((action) => (
+                          <Button
+                            key={`error-${action.key}`}
+                            type={action.kind === "primary" ? "primary" : "default"}
+                            danger={action.kind === "danger"}
+                            icon={<PlayCircleOutlined />}
+                            loading={busyAction === action.key}
+                            onClick={() => void handleAction(action.key)}
+                          >
+                            {action.label}
+                          </Button>
+                        ))}
+                      </Space>
+                    </Space>
+                  ) : null}
+                  <Collapse
+                    items={[
+                      {
+                        key: "raw-error",
+                        label: isZh ? "查看原始报错详情" : "Show raw error details",
+                        children: <pre className="code-block">{project.status.error}</pre>,
+                      },
+                    ]}
+                  />
+                </Space>
+              }
             />
           ) : null}
           <Progress
@@ -537,6 +730,13 @@ export function ProjectDetailClient({
                 )}
                 {isAwaitingReview ? (
                   <Space wrap>
+                    <Button
+                      icon={<SaveOutlined />}
+                      loading={busyAction === "save_review_draft"}
+                      onClick={() => void handleSaveReviewDraft()}
+                    >
+                      {isZh ? "保存草稿" : "Save draft"}
+                    </Button>
                     <Button
                       type="primary"
                       icon={<SendOutlined />}
