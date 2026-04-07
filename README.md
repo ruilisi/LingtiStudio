@@ -1,5 +1,9 @@
 # LingtiStudio
 
+<p align="center">
+  <img src="./screenshots/doggie.gif" alt="LingtiStudio doggie" width="180" />
+</p>
+
 Lingti means **greyhound** in Chinese, the fastest dog.  
 **LingtiStudio** helps you turn an idea into a complete AI video workflow, fast.
 

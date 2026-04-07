@@ -1,5 +1,9 @@
 # LingtiStudio
 
+<p align="center">
+  <img src="./screenshots/doggie.gif" alt="LingtiStudio doggie" width="180" />
+</p>
+
 Lingti 在中文里是“灵缇”，也就是速度极快的灰狗。  
 **LingtiStudio** 的目标不只是“生成一个视频”，而是帮助你更快地把一个想法变成一整条完整的视频生产流程。
 
