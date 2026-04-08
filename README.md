@@ -17,6 +17,29 @@ It is built for creators who want to go from short videos to longer, multi-scene
 
 ---
 
+## Chinese Demo Video
+
+<table>
+  <tr>
+    <td width="320">
+      <a href="https://www.bilibili.com/video/BV1NjDrBnECg/">
+        <img src="./screenshots/cn-video-header.png" alt="LingtiStudio Chinese demo video cover" width="320" />
+      </a>
+    </td>
+    <td>
+      <strong>Chinese demo video: LingtiStudio open-source walkthrough and output showcase</strong>
+      <br />
+      <br />
+      If you want to see the product flow, interface, and generation results before trying it yourself, this Bilibili video is the best starting point.
+      <br />
+      <br />
+      <a href="https://www.bilibili.com/video/BV1NjDrBnECg/">Watch on Bilibili</a>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## Screenshots
 
 <table>
