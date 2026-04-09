@@ -156,6 +156,28 @@ def _image_to_base64(image_path: str) -> str:
         return base64.b64encode(f.read()).decode()
 
 
+def _image_to_data_url(image_path: str) -> str:
+    ext = Path(image_path).suffix.lower()
+    mime_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+    mime_type = mime_map.get(ext, "image/png")
+    return f"data:{mime_type};base64,{_image_to_base64(image_path)}"
+
+
+def _resolve_minimax_video_api_key(config: PilipiliConfig) -> str:
+    return (config.video_gen.minimax.api_key or config.llm.minimax.api_key or "").strip()
+
+
+def _map_minimax_resolution(resolution: Optional[str]) -> str:
+    if not resolution:
+        return "1080P"
+    normalized = resolution.strip().lower()
+    if normalized == "720p":
+        return "768P"
+    if normalized == "4k":
+        return "1080P"
+    return "1080P"
+
+
 # ============================================================
 # Kling Omni API（v2.0 新增）
 # ============================================================
@@ -642,6 +664,120 @@ async def _poll_kling_task(
 # Seedance 1.5 API
 # ============================================================
 
+
+async def _submit_minimax_i2v(
+    image_path: str,
+    scene: Scene,
+    config: PilipiliConfig,
+    session: aiohttp.ClientSession,
+    resolution: Optional[str] = None,
+) -> str:
+    api_key = _resolve_minimax_video_api_key(config)
+    if not api_key:
+        raise ValueError("MiniMax Video API Key 未配置")
+
+    payload = {
+        "model": config.video_gen.minimax.model or "MiniMax-Hailuo-2.3-Fast",
+        "prompt": scene.video_prompt,
+        "first_frame_image": _image_to_data_url(image_path),
+        "duration": 6 if scene.duration <= 8 else 10,
+        "resolution": _map_minimax_resolution(resolution),
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    async with session.post("https://api.minimax.io/v1/video_generation", json=payload, headers=headers) as resp:
+        resp_text = await resp.text()
+        try:
+            result = json.loads(resp_text)
+        except json.JSONDecodeError:
+            raise RuntimeError(f"MiniMax Video API 返回非 JSON 响应 (HTTP {resp.status}): {resp_text[:200]}")
+
+    if isinstance(result.get("base_resp"), dict) and result["base_resp"].get("status_code") not in {None, 0}:
+        raise RuntimeError(
+            f"MiniMax Video 任务提交失败 (code={result['base_resp'].get('status_code')}, "
+            f"msg={result['base_resp'].get('status_msg')}): {resp_text[:500]}"
+        )
+
+    task_id = result.get("task_id")
+    if not task_id:
+        raise RuntimeError(f"MiniMax Video 任务提交失败: {resp_text[:500]}")
+    return task_id
+
+
+async def _retrieve_minimax_file_url(
+    file_id: str,
+    config: PilipiliConfig,
+    session: aiohttp.ClientSession,
+) -> str:
+    api_key = _resolve_minimax_video_api_key(config)
+    headers = {"Authorization": f"Bearer {api_key}"}
+    params = {"file_id": file_id}
+
+    async with session.get("https://api.minimax.io/v1/files/retrieve", params=params, headers=headers) as resp:
+        resp_text = await resp.text()
+        try:
+            result = json.loads(resp_text)
+        except json.JSONDecodeError:
+            raise RuntimeError(f"MiniMax File API 返回非 JSON 响应 (HTTP {resp.status}): {resp_text[:200]}")
+
+    file_info = result.get("file") or result.get("data") or {}
+    download_url = file_info.get("download_url") or file_info.get("url")
+    if not download_url:
+        raise RuntimeError(f"MiniMax File API 未返回下载地址: {resp_text[:500]}")
+    return download_url
+
+
+async def _poll_minimax_task(
+    task_id: str,
+    config: PilipiliConfig,
+    session: aiohttp.ClientSession,
+    timeout: int = 900,
+    poll_interval: int = 8,
+) -> str:
+    api_key = _resolve_minimax_video_api_key(config)
+    headers = {"Authorization": f"Bearer {api_key}"}
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        async with session.get(
+            "https://api.minimax.io/v1/query/video_generation",
+            params={"task_id": task_id},
+            headers=headers,
+        ) as resp:
+            resp_text = await resp.text()
+            try:
+                result = json.loads(resp_text)
+            except json.JSONDecodeError:
+                raise RuntimeError(f"MiniMax Video 查询返回非 JSON 响应 (HTTP {resp.status}): {resp_text[:200]}")
+
+        if isinstance(result.get("base_resp"), dict) and result["base_resp"].get("status_code") not in {None, 0}:
+            raise RuntimeError(
+                f"MiniMax Video 任务查询失败 (code={result['base_resp'].get('status_code')}, "
+                f"msg={result['base_resp'].get('status_msg')}): {resp_text[:500]}"
+            )
+
+        status = (result.get("status") or result.get("task_status") or "").lower()
+        if status in {"success", "succeed", "completed", "finished"}:
+            file_id = result.get("file_id") or (result.get("data") or {}).get("file_id")
+            if not file_id:
+                raise RuntimeError(f"MiniMax Video 任务成功但未返回 file_id: {resp_text[:500]}")
+            return await _retrieve_minimax_file_url(file_id, config, session)
+        if status in {"failed", "fail"}:
+            raise RuntimeError(f"MiniMax Video 任务失败: {resp_text[:500]}")
+
+        await asyncio.sleep(poll_interval)
+
+    raise TimeoutError(f"MiniMax Video 任务 {task_id} 超时（{timeout}s）")
+
+
+# ============================================================
+# Seedance 1.5 API
+# ============================================================
+
 async def _submit_seedance_i2v(
     image_path: str,
     scene: Scene,
@@ -872,6 +1008,18 @@ async def generate_video_clip(
                         f"[VideoGen] Kling Omni 与 v3 均失败: omni={omni_err}; v3={v3_err}"
                     ) from v3_err
 
+        elif selected_engine == "minimax":
+            task_id = await _submit_minimax_i2v(
+                image_path=image_path,
+                scene=scene,
+                config=config,
+                session=session,
+                resolution=resolution,
+            )
+            if verbose:
+                print(f"[VideoGen] MiniMax Video 任务已提交: {task_id}")
+            video_url = await _poll_minimax_task(task_id, config, session)
+
         elif selected_engine == "seedance":
             task_id = await _submit_seedance_i2v(image_path, scene, config, session, aspect_ratio=aspect_ratio)
             if verbose:
@@ -1053,7 +1201,7 @@ async def generate_all_video_clips(
                 print(f"[VideoGen] Kling Omni 批量模式不可用，回退逐个生成: {batch_error}")
 
     # 回退到逐个生成模式（并发）
-    if selected_engine in ("kling", "kling_omni") and max_concurrent > 1:
+    if selected_engine in ("kling", "kling_omni", "minimax") and max_concurrent > 1:
         max_concurrent = 1
         if verbose:
             print("[VideoGen] Kling 逐个生成模式已降为串行，避免第三方 CDN 上传抖动")

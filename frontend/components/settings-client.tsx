@@ -110,6 +110,7 @@ export function SettingsClient() {
                     <StatusRow label={`LLM · ${status.llm.provider}`} configured={status.llm.configured} onTest={() => void handleTest("llm")} />
                     <StatusRow label={`Image · ${status.image_gen.provider}`} configured={status.image_gen.configured} onTest={() => void handleTest("image_gen")} />
                     <StatusRow label={`TTS · ${status.tts.provider}`} configured={status.tts.configured} onTest={() => void handleTest("tts")} />
+                    <StatusRow label="MiniMax Video" configured={status.minimax_video.configured} onTest={() => void handleTest("minimax_video")} />
                     <StatusRow label="Kling" configured={status.kling.configured} onTest={() => void handleTest("kling")} />
                     <StatusRow label="Seedance" configured={status.seedance.configured} onTest={() => void handleTest("seedance")} />
                   </>

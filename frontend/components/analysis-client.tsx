@@ -42,7 +42,7 @@ export function AnalysisClient() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
-  const [form] = Form.useForm<{ topic?: string; video_engine?: "kling" | "seedance" | "auto" }>();
+  const [form] = Form.useForm<{ topic?: string; video_engine?: "kling" | "seedance" | "minimax" | "auto" }>();
 
   async function refreshTask(analysisId?: string) {
     const id = analysisId || task?.analysis_id;
@@ -111,7 +111,7 @@ export function AnalysisClient() {
     }
   }
 
-  async function handleCreateProject(values: { topic?: string; video_engine?: "kling" | "seedance" | "auto" }) {
+  async function handleCreateProject(values: { topic?: string; video_engine?: "kling" | "seedance" | "minimax" | "auto" }) {
     if (!task?.analysis_id) {
       return;
     }
@@ -219,6 +219,7 @@ export function AnalysisClient() {
                     <Select
                       options={[
                         { value: "kling", label: "Kling" },
+                        { value: "minimax", label: "MiniMax Video" },
                         { value: "seedance", label: "Seedance" },
                         { value: "auto", label: "Auto" }
                       ]}

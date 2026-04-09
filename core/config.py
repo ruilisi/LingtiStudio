@@ -81,6 +81,10 @@ class VideoGenProviderConfig:
 @dataclass
 class VideoGenConfig:
     default_provider: str = "kling"
+    minimax: VideoGenProviderConfig = field(default_factory=lambda: VideoGenProviderConfig(
+        model="MiniMax-Hailuo-2.3-Fast",
+        base_url="https://api.minimax.io",
+    ))
     kling: VideoGenProviderConfig = field(default_factory=lambda: VideoGenProviderConfig(
         model="kling-v3",
         base_url="https://api.klingai.com",
@@ -189,6 +193,7 @@ def load_config(config_path: Optional[str] = None) -> PilipiliConfig:
         "KLING_API_KEY": ("video_gen", "kling", "api_key"),
         "KLING_API_SECRET": ("video_gen", "kling", "api_secret"),
         "VOLCENGINE_API_KEY": ("video_gen", "seedance", "api_key"),
+        "MINIMAX_VIDEO_API_KEY": ("video_gen", "minimax", "api_key"),
         "MEM0_API_KEY": ("memory", "mem0_api_key"),
         "LLM_PROVIDER": ("llm", "default_provider"),
         "VIDEO_PROVIDER": ("video_gen", "default_provider"),
@@ -230,7 +235,7 @@ def load_config(config_path: Optional[str] = None) -> PilipiliConfig:
     if "video_gen" in raw:
         vg = raw["video_gen"]
         config.video_gen.default_provider = vg.get("default_provider", config.video_gen.default_provider)
-        for provider in ["kling", "seedance"]:
+        for provider in ["minimax", "kling", "seedance"]:
             if provider in vg:
                 p = vg[provider]
                 provider_cfg = getattr(config.video_gen, provider)

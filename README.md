@@ -126,7 +126,7 @@ This is especially useful when you want the speed of AI generation but still nee
 - Frontend: Next.js + Ant Design
 - LLM: DeepSeek / MiniMax / Gemini / OpenAI / Kimi / Zhipu / Ollama
 - Image: MiniMax Image / Gemini image generation
-- Video: Kling / Seedance
+- Video: MiniMax Video / Kling / Seedance
 - TTS: MiniMax
 - Assembly: FFmpeg
 
@@ -148,6 +148,7 @@ The table below reflects the built-in provider and model options currently expos
 | Keyframe image generation | MiniMax Image | `image-01` |
 | Keyframe image generation | Nano Banana / Gemini Image | `gemini-2.0-flash-preview-image-generation`, `gemini-3-pro-image-preview` |
 | Voiceover / TTS | MiniMax TTS | `speech-2.8-hd`, `speech-02-hd` |
+| Video clip generation | MiniMax Video | `MiniMax-Hailuo-2.3-Fast`, `MiniMax-Hailuo-2.3`, `T2V-01-Director` |
 | Video clip generation | Kling | `kling-v3` |
 | Video clip generation | Seedance | `doubao-seedance-1-5-pro-250528`, `Doubao-Seedance-1.0-pro` |
 | Assembly / subtitles / export | Local FFmpeg | local environment dependent |
@@ -245,7 +246,7 @@ The release image is intentionally trimmed for the browser-first workflow:
 - it avoids shipping heavy optional dependencies such as local Whisper / Torch by default
 - optional integrations such as pyJianYingDraft still fall back gracefully when unavailable
 
-### Recommended: prebuilt release image
+### Prebuilt release image
 
 Tagged releases can publish a prebuilt container image to GHCR through GitHub Actions:
 
@@ -259,7 +260,7 @@ docker run --rm \
   ghcr.io/ruilisi/lingtistudio:v1.1.0
 ```
 
-This is the fastest path for end users because it avoids local image builds entirely.
+This is a convenient path for end users who want to skip local image builds.
 
 ### Option 1: Docker Compose
 

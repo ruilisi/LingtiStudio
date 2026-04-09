@@ -29,6 +29,7 @@ type FormValues = {
   image_gen_api_key?: string;
   video_provider?: string;
   video_model?: string;
+  minimax_video_api_key?: string;
   kling_api_key?: string;
   kling_api_secret?: string;
   seedance_api_key?: string;
@@ -348,18 +349,23 @@ export function ConfigurationForm({
 
         <Row gutter={16}>
           <Col xs={24} md={12}>
-            <Form.Item name="kling_api_key" label="Kling API Key">
-              <Input.Password />
+            <Form.Item name="minimax_video_api_key" label="MiniMax Video API Key">
+              <Input.Password placeholder={isZh ? "可留空，默认复用 llm.minimax.api_key" : "Optional. Falls back to llm.minimax.api_key by default"} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item name="kling_api_secret" label="Kling API Secret">
+            <Form.Item name="kling_api_key" label="Kling API Key">
               <Input.Password />
             </Form.Item>
           </Col>
         </Row>
 
         <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="kling_api_secret" label="Kling API Secret">
+              <Input.Password />
+            </Form.Item>
+          </Col>
           <Col xs={24} md={12}>
             <Form.Item name="seedance_api_key" label="Seedance API Key">
               <Input.Password />

@@ -434,6 +434,7 @@ class UpdateApiKeysRequest(BaseModel):
     tts_default_voice: Optional[str] = None
     video_provider: Optional[str] = None
     video_model: Optional[str] = None
+    minimax_video_api_key: Optional[str] = None
     kling_api_key: Optional[str] = None
     kling_api_secret: Optional[str] = None
     seedance_api_key: Optional[str] = None
@@ -474,6 +475,7 @@ IMAGE_PROVIDER_OPTIONS = [
 ]
 
 VIDEO_PROVIDER_OPTIONS = [
+    {"value": "minimax", "label": "MiniMax Video", "models": ["MiniMax-Hailuo-2.3-Fast", "MiniMax-Hailuo-2.3", "T2V-01-Director"]},
     {"value": "kling", "label": "Kling", "models": ["kling-v3"]},
     {"value": "seedance", "label": "Seedance", "models": ["doubao-seedance-1-5-pro-250528", "Doubao-Seedance-1.0-pro"]},
 ]
@@ -595,6 +597,8 @@ def _is_tts_configured(config: PilipiliConfig) -> bool:
 
 def _is_video_configured(config: PilipiliConfig) -> bool:
     provider = config.video_gen.default_provider
+    if provider == "minimax":
+        return bool(config.video_gen.minimax.api_key or getattr(config.llm.minimax, "api_key", ""))
     active_video = getattr(config.video_gen, provider, config.video_gen.kling)
     if not getattr(active_video, "model", ""):
         return False
@@ -1681,6 +1685,9 @@ async def update_api_keys(request: UpdateApiKeysRequest):
     if request.video_model:
         updates[f"video_gen.{video_provider}.model"] = request.video_model
 
+    if request.minimax_video_api_key:
+        updates["video_gen.minimax.api_key"] = request.minimax_video_api_key
+
     if request.kling_api_key:
         updates["video_gen.kling.api_key"] = request.kling_api_key
 
@@ -2234,6 +2241,9 @@ async def get_keys_status():
         "kling": {
             "configured": bool(config.video_gen.kling.api_key and config.video_gen.kling.api_secret),
         },
+        "minimax_video": {
+            "configured": bool(config.video_gen.minimax.api_key or getattr(config.llm.minimax, "api_key", "")),
+        },
         "seedance": {
             "configured": bool(config.video_gen.seedance.api_key),
         },
@@ -2269,6 +2279,7 @@ async def get_system_connectors():
             "default_provider": video_provider,
             "model": active_video.model,
             "configured": _is_video_configured(config),
+            "minimax_configured": bool(config.video_gen.minimax.api_key or getattr(config.llm.minimax, "api_key", "")),
             "kling_configured": bool(config.video_gen.kling.api_key and config.video_gen.kling.api_secret),
             "seedance_configured": bool(config.video_gen.seedance.api_key),
         },
@@ -2281,7 +2292,7 @@ async def get_system_setup():
 
 
 class TestKeyRequest(BaseModel):
-    service: str  # llm / image_gen / tts / kling / seedance
+    service: str  # llm / image_gen / tts / minimax_video / kling / seedance
 
 
 @app.post("/api/settings/keys/test")
@@ -2386,6 +2397,31 @@ async def test_api_key(request: TestKeyRequest):
                     return {"success": True, "message": "MiniMax TTS 连接成功"}
                 return {"success": False, "message": f"MiniMax 返回错误: {msg} (code={code})"}
             return {"success": False, "message": f"MiniMax 返回异常: {json.dumps(result, ensure_ascii=False)[:200]}"}
+
+        elif service == "minimax_video":
+            api_key = config.video_gen.minimax.api_key or config.llm.minimax.api_key
+            if not api_key:
+                return {"success": False, "message": "MiniMax Video API Key 未配置"}
+            import aiohttp
+            url = "https://api.minimax.io/v1/video_generation"
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": config.video_gen.minimax.model or "MiniMax-Hailuo-2.3-Fast",
+                "prompt": "A cinematic short shot of ocean waves at sunset",
+                "first_frame_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5x6c8AAAAASUVORK5CYII=",
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, headers=headers) as resp:
+                    status = resp.status
+                    text = await resp.text()
+            if status in {401, 403}:
+                return {"success": False, "message": f"MiniMax Video 认证失败 (HTTP {status})，请检查 API Key"}
+            if status >= 500:
+                return {"success": False, "message": f"MiniMax Video 服务异常 (HTTP {status})"}
+            return {"success": True, "message": f"MiniMax Video API 可访问 (HTTP {status})"}
 
         elif service == "kling":
             if not config.video_gen.kling.api_key or not config.video_gen.kling.api_secret:

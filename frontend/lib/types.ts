@@ -112,7 +112,7 @@ export interface CreateProjectPayload {
   style?: string;
   target_duration?: number;
   voice_id?: string;
-  video_engine?: "kling" | "seedance" | "auto";
+  video_engine?: "kling" | "seedance" | "minimax" | "auto";
   reference_images?: string[];
   add_subtitles?: boolean;
   resolution?: "720p" | "1080p" | "4K";
@@ -141,6 +141,9 @@ export interface KeysStatus {
     configured: boolean;
   };
   kling: {
+    configured: boolean;
+  };
+  minimax_video: {
     configured: boolean;
   };
   seedance: {
@@ -183,6 +186,7 @@ export interface ConnectorStatus {
     default_provider: string;
     model?: string;
     configured: boolean;
+    minimax_configured?: boolean;
     kling_configured: boolean;
     seedance_configured: boolean;
   };

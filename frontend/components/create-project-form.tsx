@@ -34,7 +34,7 @@ interface FormValues {
   style?: string;
   target_duration: number;
   voice_id?: string;
-  video_engine: "kling" | "seedance" | "auto";
+  video_engine: "kling" | "seedance" | "minimax" | "auto";
   resolution: "720p" | "1080p" | "4K";
   aspect_ratio: "9:16" | "16:9";
   add_subtitles: boolean;
@@ -430,6 +430,7 @@ export function CreateProjectForm({ onCreated, variant = "studio" }: Props) {
                           style={{ width: 144 }}
                           options={[
                             { value: "kling", label: "Kling" },
+                            { value: "minimax", label: "MiniMax Video" },
                             { value: "seedance", label: "Seedance" },
                             { value: "auto", label: "Auto" }
                           ]}
